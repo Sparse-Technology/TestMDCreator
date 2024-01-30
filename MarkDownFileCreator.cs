@@ -27,7 +27,7 @@ internal class MarkDownFileCreator
         {
             log?.LogInformation($"Creating MD for file [{++index}] '{file}'");
             var test = xlsxFileReader.GetTestModel(file);
-            var md = CreateTestMD(test);
+            var md = CreateTestMD(test, index);
             document += md + "\n\n";
         }
 
@@ -35,10 +35,26 @@ internal class MarkDownFileCreator
         File.WriteAllText(outputFileName, document);
     }
 
-    private string CreateTestMD(TestModel test)
+    private string CreateTestMD(TestModel test, int testIndex)
     {
-        return $"# {test.Name}\n\n{test.Description}\n\n## Type\n\n{test.Type}\n\n" +
-            $"## Tags\n\n{string.Join(", ", test.Tags ?? [])}\n\n" +
-            $"## Steps\n\n{string.Join("\n", test.Steps ?? [])}\n\n";
+        var boxStr = " <ul><li> - [ ] </li></ul> ";
+        var tpl = $@"
+# {testIndex}.0 {test.Name}
+
+{test.Description}
+
+| Test No | Test Aciklamasi | Test Durumu | Test Sonucu | Test Notu |
+| :--- | --- | :---: | :---: | --- |";
+
+        if (test.Steps != null)
+        {
+            var index = 0;
+            foreach (var step in test.Steps)
+            {
+                tpl += $"\n| {testIndex}.0.{index++} | {step} | {boxStr} | {boxStr} | | |";
+            }
+        }
+
+        return tpl;
     }
 }

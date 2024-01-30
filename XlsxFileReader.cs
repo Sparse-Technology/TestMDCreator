@@ -13,6 +13,7 @@ internal class XlsxFileReader
 
     public TestModel GetTestModel(string filename)
     {
+        TestModel testModel = new TestModel();
         log?.LogInformation($"Reading file '{filename}'");
 
         using (DocumentFormat.OpenXml.Packaging.SpreadsheetDocument document = DocumentFormat.OpenXml.Packaging.SpreadsheetDocument.Open(filename, true))
@@ -56,12 +57,17 @@ internal class XlsxFileReader
 
                                 var value = stringTable.SharedStringTable.ElementAt(int.Parse(cell.CellValue?.Text ?? "0")).InnerText;
                                 log?.LogInformation($"Cell: {cell.CellReference}, Type: {cell.DataType?.Value}, Value: {value}");
+                                if (cell.CellReference?.Value == "A2")
+                                    testModel.Name = value;
+                                else if (cell.CellReference?.Value == "B2")
+                                    testModel.Description = value;
                             }
                         }
                     }
                 }
 
-                if (sheet.Name == "Test Adimlari") {
+                if (sheet.Name == "Test Adimlari")
+                {
                     var worksheetPart = (DocumentFormat.OpenXml.Packaging.WorksheetPart)workbookPart.GetPartById(sheet.Id);
                     if (worksheetPart == null)
                         throw new NullReferenceException("WorksheetPart is null");
@@ -70,8 +76,14 @@ internal class XlsxFileReader
                     if (rows == null)
                         throw new NullReferenceException("Rows is null");
 
+                    bool firstRow = true;
                     foreach (var row in rows)
                     {
+                        if (firstRow)
+                        {
+                            firstRow = false;
+                            continue;
+                        }
                         log?.LogInformation($"Row: {row.RowIndex}");
                         var cells = row.Descendants<DocumentFormat.OpenXml.Spreadsheet.Cell>();
                         if (cells == null)
@@ -88,6 +100,12 @@ internal class XlsxFileReader
 
                                 var value = stringTable.SharedStringTable.ElementAt(int.Parse(cell.CellValue?.Text ?? "0")).InnerText;
                                 log?.LogInformation($"Cell: {cell.CellReference}, Type: {cell.DataType?.Value}, Value: {value}");
+
+                                if (cell.CellReference?.Value?.StartsWith("A") ?? false)
+                                {
+                                    testModel.Steps ??= new List<string>();
+                                    testModel.Steps.Add(value);
+                                }
                             }
                         }
                     }
@@ -95,9 +113,6 @@ internal class XlsxFileReader
             }
         }
 
-
-
-
-        return new TestModel();
+        return testModel;
     }
 }
