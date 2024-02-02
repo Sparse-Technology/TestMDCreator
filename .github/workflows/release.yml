@@ -22,9 +22,13 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v3
       with:
-        name: publish_dist
-        path: bin/publish_dist.tar.gz
+        name: upload-artifact
         retention-days: 5
+        path: |
+            bin/publish_dist/tmdc-linux-x64
+            bin/publish_dist/tmdc-win-x64.exe
+            bin/publish_dist/tmdc-linux-arm64
+            bin/publish_dist/tmdc-linux-arm
 
     - name: Upload Assets
       uses: softprops/action-gh-release@v1
